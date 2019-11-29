@@ -1,0 +1,9 @@
+17:53:51 **** Incremental Build of configuration Nios II for project ponteiros ****
+make all 
+Info: Building ../count_binary_bsp/
+make --no-print-directory -C ../count_binary_bsp/
+[BSP build complete]
+[ponteiros build complete]
+
+17:53:51 Build Finished (took 123ms)
+

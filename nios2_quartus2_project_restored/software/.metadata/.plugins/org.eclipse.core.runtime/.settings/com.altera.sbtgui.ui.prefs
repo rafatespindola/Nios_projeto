@@ -1,0 +1,5 @@
+eclipse.preferences.version=1
+newApplicationWizardPage.defaultLocation=/media/sf_Data/IFSC/ownCloud/teaching/DLP2/src/niosII_hw_dev_tutorial_vhdl_aula/software/ponteiros
+newSoftwareExampleWizardPage.defaultLocation=/media/sf_Data/IFSC/ownCloud/teaching/DLP2/src/niosII_hw_dev_tutorial_vhdl_aula/software/count_binary
+newSoftwareExampleWizardPage.sopcinfoFile=/media/sf_Data/IFSC/ownCloud/teaching/DLP2/src/niosII_hw_dev_tutorial_vhdl_aula/first_nios2_system.sopcinfo
+newSoftwareExampleWizardPage2.newBspLocation=/media/sf_Data/IFSC/ownCloud/teaching/DLP2/src/niosII_hw_dev_tutorial_vhdl_aula/software/count_binary_bsp

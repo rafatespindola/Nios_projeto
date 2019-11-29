@@ -1,0 +1,7 @@
+{
+	"common_dir" : "/media/sf_Data/IFSC/ownCloud/teaching/DLP2/src/niosII_hw_dev_tutorial_vhdl_aula/",
+	"acds_version" : "Version 18.1.0",
+	"platform" : "linux",
+	"os" : "Ubuntu 18.04.3",
+	"qpf" : "nios2_quartus2_project.qpf"
+}

@@ -1,0 +1,1 @@
+create_clock -name sopc_clk -period 20 [get_ports PLD_CLOCKINPUT]

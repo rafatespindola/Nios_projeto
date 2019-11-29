@@ -1,0 +1,33 @@
+#include "alt_types.h"
+#include "altera_avalon_pio_regs.h"
+#include "sys/alt_irq.h"
+#include "system.h"
+#include <stdio.h>
+#include <unistd.h>
+
+static alt_u8 count;
+static alt_u8 sw_value;
+
+static void initial_message()
+{
+
+    printf("\n\n**************************\n");
+    printf("* Hello from Nios II!    *\n");
+    printf("* SW and LEDGs           *\n");
+    printf("**************************\n");
+}
+
+int main(void)
+{
+	count = 0;
+	initial_message();
+
+	while(1){
+
+		sw_value = (*(volatile alt_u8 *)(0x00011020));
+		(*( alt_u8 *)(0x00011030)) = sw_value;
+
+		usleep(100000);		//Sleep 0.1s
+	}
+
+}
