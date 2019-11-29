@@ -8,10 +8,14 @@ use IEEE.numeric_std.all;
 
 entity first_nios2_system is
 	port (
-		clk_clk                            : in  std_logic                    := '0';             --                         clk.clk
-		led_pio_external_connection_export : out std_logic_vector(7 downto 0);                    -- led_pio_external_connection.export
-		reset_reset_n                      : in  std_logic                    := '0';             --                       reset.reset_n
-		sw_pio_external_connection_export  : in  std_logic_vector(7 downto 0) := (others => '0')  --  sw_pio_external_connection.export
+		clk_clk                            : in    std_logic                    := '0';             --                         clk.clk
+		lcd_external_RS                    : out   std_logic;                                       --                lcd_external.RS
+		lcd_external_RW                    : out   std_logic;                                       --                            .RW
+		lcd_external_data                  : inout std_logic_vector(7 downto 0) := (others => '0'); --                            .data
+		lcd_external_E                     : out   std_logic;                                       --                            .E
+		led_pio_external_connection_export : out   std_logic_vector(7 downto 0);                    -- led_pio_external_connection.export
+		reset_reset_n                      : in    std_logic                    := '0';             --                       reset.reset_n
+		sw_pio_external_connection_export  : in    std_logic_vector(7 downto 0) := (others => '0')  --  sw_pio_external_connection.export
 	);
 end entity first_nios2_system;
 
@@ -62,6 +66,23 @@ architecture rtl of first_nios2_system is
 			av_irq         : out std_logic                                         -- irq
 		);
 	end component first_nios2_system_jtag_uart;
+
+	component first_nios2_system_lcd is
+		port (
+			reset_n       : in    std_logic                    := 'X';             -- reset_n
+			clk           : in    std_logic                    := 'X';             -- clk
+			begintransfer : in    std_logic                    := 'X';             -- begintransfer
+			read          : in    std_logic                    := 'X';             -- read
+			write         : in    std_logic                    := 'X';             -- write
+			readdata      : out   std_logic_vector(7 downto 0);                    -- readdata
+			writedata     : in    std_logic_vector(7 downto 0) := (others => 'X'); -- writedata
+			address       : in    std_logic_vector(1 downto 0) := (others => 'X'); -- address
+			LCD_RS        : out   std_logic;                                       -- export
+			LCD_RW        : out   std_logic;                                       -- export
+			LCD_data      : inout std_logic_vector(7 downto 0) := (others => 'X'); -- export
+			LCD_E         : out   std_logic                                        -- export
+		);
+	end component first_nios2_system_lcd;
 
 	component first_nios2_system_led_pio is
 		port (
@@ -156,6 +177,12 @@ architecture rtl of first_nios2_system is
 			jtag_uart_avalon_jtag_slave_writedata   : out std_logic_vector(31 downto 0);                    -- writedata
 			jtag_uart_avalon_jtag_slave_waitrequest : in  std_logic                     := 'X';             -- waitrequest
 			jtag_uart_avalon_jtag_slave_chipselect  : out std_logic;                                        -- chipselect
+			lcd_control_slave_address               : out std_logic_vector(1 downto 0);                     -- address
+			lcd_control_slave_write                 : out std_logic;                                        -- write
+			lcd_control_slave_read                  : out std_logic;                                        -- read
+			lcd_control_slave_readdata              : in  std_logic_vector(7 downto 0)  := (others => 'X'); -- readdata
+			lcd_control_slave_writedata             : out std_logic_vector(7 downto 0);                     -- writedata
+			lcd_control_slave_begintransfer         : out std_logic;                                        -- begintransfer
 			led_pio_s1_address                      : out std_logic_vector(1 downto 0);                     -- address
 			led_pio_s1_write                        : out std_logic;                                        -- write
 			led_pio_s1_readdata                     : in  std_logic_vector(31 downto 0) := (others => 'X'); -- readdata
@@ -278,6 +305,12 @@ architecture rtl of first_nios2_system is
 	signal mm_interconnect_0_jtag_uart_avalon_jtag_slave_writedata       : std_logic_vector(31 downto 0); -- mm_interconnect_0:jtag_uart_avalon_jtag_slave_writedata -> jtag_uart:av_writedata
 	signal mm_interconnect_0_sysid_control_slave_readdata                : std_logic_vector(31 downto 0); -- sysid:readdata -> mm_interconnect_0:sysid_control_slave_readdata
 	signal mm_interconnect_0_sysid_control_slave_address                 : std_logic_vector(0 downto 0);  -- mm_interconnect_0:sysid_control_slave_address -> sysid:address
+	signal mm_interconnect_0_lcd_control_slave_readdata                  : std_logic_vector(7 downto 0);  -- lcd:readdata -> mm_interconnect_0:lcd_control_slave_readdata
+	signal mm_interconnect_0_lcd_control_slave_address                   : std_logic_vector(1 downto 0);  -- mm_interconnect_0:lcd_control_slave_address -> lcd:address
+	signal mm_interconnect_0_lcd_control_slave_read                      : std_logic;                     -- mm_interconnect_0:lcd_control_slave_read -> lcd:read
+	signal mm_interconnect_0_lcd_control_slave_begintransfer             : std_logic;                     -- mm_interconnect_0:lcd_control_slave_begintransfer -> lcd:begintransfer
+	signal mm_interconnect_0_lcd_control_slave_write                     : std_logic;                     -- mm_interconnect_0:lcd_control_slave_write -> lcd:write
+	signal mm_interconnect_0_lcd_control_slave_writedata                 : std_logic_vector(7 downto 0);  -- mm_interconnect_0:lcd_control_slave_writedata -> lcd:writedata
 	signal mm_interconnect_0_cpu_debug_mem_slave_readdata                : std_logic_vector(31 downto 0); -- cpu:debug_mem_slave_readdata -> mm_interconnect_0:cpu_debug_mem_slave_readdata
 	signal mm_interconnect_0_cpu_debug_mem_slave_waitrequest             : std_logic;                     -- cpu:debug_mem_slave_waitrequest -> mm_interconnect_0:cpu_debug_mem_slave_waitrequest
 	signal mm_interconnect_0_cpu_debug_mem_slave_debugaccess             : std_logic;                     -- mm_interconnect_0:cpu_debug_mem_slave_debugaccess -> cpu:debug_mem_slave_debugaccess
@@ -315,7 +348,7 @@ architecture rtl of first_nios2_system is
 	signal mm_interconnect_0_jtag_uart_avalon_jtag_slave_write_ports_inv : std_logic;                     -- mm_interconnect_0_jtag_uart_avalon_jtag_slave_write:inv -> jtag_uart:av_write_n
 	signal mm_interconnect_0_sys_clk_timer_s1_write_ports_inv            : std_logic;                     -- mm_interconnect_0_sys_clk_timer_s1_write:inv -> sys_clk_timer:write_n
 	signal mm_interconnect_0_led_pio_s1_write_ports_inv                  : std_logic;                     -- mm_interconnect_0_led_pio_s1_write:inv -> led_pio:write_n
-	signal rst_controller_reset_out_reset_ports_inv                      : std_logic;                     -- rst_controller_reset_out_reset:inv -> [cpu:reset_n, jtag_uart:rst_n, led_pio:reset_n, sw_pio:reset_n, sys_clk_timer:reset_n, sysid:reset_n]
+	signal rst_controller_reset_out_reset_ports_inv                      : std_logic;                     -- rst_controller_reset_out_reset:inv -> [cpu:reset_n, jtag_uart:rst_n, lcd:reset_n, led_pio:reset_n, sw_pio:reset_n, sys_clk_timer:reset_n, sysid:reset_n]
 
 begin
 
@@ -362,6 +395,22 @@ begin
 			av_writedata   => mm_interconnect_0_jtag_uart_avalon_jtag_slave_writedata,       --                  .writedata
 			av_waitrequest => mm_interconnect_0_jtag_uart_avalon_jtag_slave_waitrequest,     --                  .waitrequest
 			av_irq         => irq_mapper_receiver0_irq                                       --               irq.irq
+		);
+
+	lcd : component first_nios2_system_lcd
+		port map (
+			reset_n       => rst_controller_reset_out_reset_ports_inv,          --         reset.reset_n
+			clk           => clk_clk,                                           --           clk.clk
+			begintransfer => mm_interconnect_0_lcd_control_slave_begintransfer, -- control_slave.begintransfer
+			read          => mm_interconnect_0_lcd_control_slave_read,          --              .read
+			write         => mm_interconnect_0_lcd_control_slave_write,         --              .write
+			readdata      => mm_interconnect_0_lcd_control_slave_readdata,      --              .readdata
+			writedata     => mm_interconnect_0_lcd_control_slave_writedata,     --              .writedata
+			address       => mm_interconnect_0_lcd_control_slave_address,       --              .address
+			LCD_RS        => lcd_external_RS,                                   --      external.export
+			LCD_RW        => lcd_external_RW,                                   --              .export
+			LCD_data      => lcd_external_data,                                 --              .export
+			LCD_E         => lcd_external_E                                     --              .export
 		);
 
 	led_pio : component first_nios2_system_led_pio
@@ -452,6 +501,12 @@ begin
 			jtag_uart_avalon_jtag_slave_writedata   => mm_interconnect_0_jtag_uart_avalon_jtag_slave_writedata,   --                                .writedata
 			jtag_uart_avalon_jtag_slave_waitrequest => mm_interconnect_0_jtag_uart_avalon_jtag_slave_waitrequest, --                                .waitrequest
 			jtag_uart_avalon_jtag_slave_chipselect  => mm_interconnect_0_jtag_uart_avalon_jtag_slave_chipselect,  --                                .chipselect
+			lcd_control_slave_address               => mm_interconnect_0_lcd_control_slave_address,               --               lcd_control_slave.address
+			lcd_control_slave_write                 => mm_interconnect_0_lcd_control_slave_write,                 --                                .write
+			lcd_control_slave_read                  => mm_interconnect_0_lcd_control_slave_read,                  --                                .read
+			lcd_control_slave_readdata              => mm_interconnect_0_lcd_control_slave_readdata,              --                                .readdata
+			lcd_control_slave_writedata             => mm_interconnect_0_lcd_control_slave_writedata,             --                                .writedata
+			lcd_control_slave_begintransfer         => mm_interconnect_0_lcd_control_slave_begintransfer,         --                                .begintransfer
 			led_pio_s1_address                      => mm_interconnect_0_led_pio_s1_address,                      --                      led_pio_s1.address
 			led_pio_s1_write                        => mm_interconnect_0_led_pio_s1_write,                        --                                .write
 			led_pio_s1_readdata                     => mm_interconnect_0_led_pio_s1_readdata,                     --                                .readdata

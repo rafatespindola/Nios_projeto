@@ -42,7 +42,7 @@
 
 `timescale 1 ns / 1 ns
 
-module first_nios2_system_mm_interconnect_0_router_004_default_decode
+module first_nios2_system_mm_interconnect_0_router_005_default_decode
   #(
      parameter DEFAULT_CHANNEL = 0,
                DEFAULT_WR_CHANNEL = -1,
@@ -50,9 +50,9 @@ module first_nios2_system_mm_interconnect_0_router_004_default_decode
                DEFAULT_DESTID = 0 
    )
   (output [79 - 77 : 0] default_destination_id,
-   output [7-1 : 0] default_wr_channel,
-   output [7-1 : 0] default_rd_channel,
-   output [7-1 : 0] default_src_channel
+   output [8-1 : 0] default_wr_channel,
+   output [8-1 : 0] default_rd_channel,
+   output [8-1 : 0] default_src_channel
   );
 
   assign default_destination_id = 
@@ -63,7 +63,7 @@ module first_nios2_system_mm_interconnect_0_router_004_default_decode
       assign default_src_channel = '0;
     end
     else begin : default_channel_assignment
-      assign default_src_channel = 7'b1 << DEFAULT_CHANNEL;
+      assign default_src_channel = 8'b1 << DEFAULT_CHANNEL;
     end
   endgenerate
 
@@ -73,15 +73,15 @@ module first_nios2_system_mm_interconnect_0_router_004_default_decode
       assign default_rd_channel = '0;
     end
     else begin : default_rw_channel_assignment
-      assign default_wr_channel = 7'b1 << DEFAULT_WR_CHANNEL;
-      assign default_rd_channel = 7'b1 << DEFAULT_RD_CHANNEL;
+      assign default_wr_channel = 8'b1 << DEFAULT_WR_CHANNEL;
+      assign default_rd_channel = 8'b1 << DEFAULT_RD_CHANNEL;
     end
   endgenerate
 
 endmodule
 
 
-module first_nios2_system_mm_interconnect_0_router_004
+module first_nios2_system_mm_interconnect_0_router_005
 (
     // -------------------
     // Clock & Reset
@@ -103,7 +103,7 @@ module first_nios2_system_mm_interconnect_0_router_004
     // -------------------
     output                          src_valid,
     output reg [93-1    : 0] src_data,
-    output reg [7-1 : 0] src_channel,
+    output reg [8-1 : 0] src_channel,
     output                          src_startofpacket,
     output                          src_endofpacket,
     input                           src_ready
@@ -119,7 +119,7 @@ module first_nios2_system_mm_interconnect_0_router_004
     localparam PKT_PROTECTION_H = 83;
     localparam PKT_PROTECTION_L = 81;
     localparam ST_DATA_W = 93;
-    localparam ST_CHANNEL_W = 7;
+    localparam ST_CHANNEL_W = 8;
     localparam DECODER_TYPE = 1;
 
     localparam PKT_TRANS_WRITE = 55;
@@ -158,7 +158,7 @@ module first_nios2_system_mm_interconnect_0_router_004
     assign src_valid         = sink_valid;
     assign src_startofpacket = sink_startofpacket;
     assign src_endofpacket   = sink_endofpacket;
-    wire [7-1 : 0] default_src_channel;
+    wire [8-1 : 0] default_src_channel;
 
 
 
@@ -170,7 +170,7 @@ module first_nios2_system_mm_interconnect_0_router_004
     assign read_transaction  = sink_data[PKT_TRANS_READ];
 
 
-    first_nios2_system_mm_interconnect_0_router_004_default_decode the_default_decode(
+    first_nios2_system_mm_interconnect_0_router_005_default_decode the_default_decode(
       .default_destination_id (),
       .default_wr_channel   (),
       .default_rd_channel   (),
@@ -190,11 +190,11 @@ module first_nios2_system_mm_interconnect_0_router_004
 
 
         if (destid == 0 ) begin
-            src_channel = 7'b01;
+            src_channel = 8'b01;
         end
 
         if (destid == 1  && read_transaction) begin
-            src_channel = 7'b10;
+            src_channel = 8'b10;
         end
 
 

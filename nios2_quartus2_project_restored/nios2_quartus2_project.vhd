@@ -26,6 +26,8 @@ ENTITY nios2_quartus2_project IS
 	(
 		CLOCK_50 :  IN  STD_LOGIC;
 		LEDG :  OUT  STD_LOGIC_VECTOR(7 DOWNTO 0);
+		LCD_DATA : INOUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+		LCD_EN, LCD_RW, LCD_RS, LCD_ON: OUT STD_LOGIC;
 		SW:   IN  STD_LOGIC_VECTOR(7 DOWNTO 0)
 		
 	);
@@ -36,12 +38,17 @@ ARCHITECTURE bdf_type OF nios2_quartus2_project IS
 
 	component first_nios2_system is
 		port (
-			clk_clk                            : in  std_logic                    := 'X';             -- clk
-			led_pio_external_connection_export : out std_logic_vector(7 downto 0);                    -- export
-			reset_reset_n                      : in  std_logic                    := 'X';             -- reset_n
-			sw_pio_external_connection_export  : in  std_logic_vector(7 downto 0) := (others => 'X')  -- export
+			clk_clk                            : in    std_logic                    := 'X';             -- clk
+			led_pio_external_connection_export : out   std_logic_vector(7 downto 0);                    -- export
+			reset_reset_n                      : in    std_logic                    := 'X';             -- reset_n
+			sw_pio_external_connection_export  : in    std_logic_vector(7 downto 0) := (others => 'X'); -- export
+			lcd_external_RS                    : out   std_logic;                                       -- RS
+			lcd_external_RW                    : out   std_logic;                                       -- RW
+			lcd_external_data                  : inout std_logic_vector(7 downto 0) := (others => 'X'); -- data
+			lcd_external_E                     : out   std_logic                                        -- E
 		);
 	end component first_nios2_system;
+
 
 
 	
@@ -57,7 +64,11 @@ BEGIN
 			clk_clk                            => CLOCK_50,                            
 			led_pio_external_connection_export => LEDG, 
 			reset_reset_n                      => vcc,  
-			sw_pio_external_connection_export  => SW   
+			sw_pio_external_connection_export  => SW,  
+			lcd_external_RS                    => LCD_RS,      
+			lcd_external_RW                    => LCD_RW,     
+			lcd_external_data                  => LCD_DATA,       
+			lcd_external_E                     => LCD_EN                   
 		);
 
 		 

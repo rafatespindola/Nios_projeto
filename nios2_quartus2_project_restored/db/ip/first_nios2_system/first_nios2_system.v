@@ -5,6 +5,10 @@
 `timescale 1 ps / 1 ps
 module first_nios2_system (
 		input  wire       clk_clk,                            //                         clk.clk
+		output wire       lcd_external_RS,                    //                lcd_external.RS
+		output wire       lcd_external_RW,                    //                            .RW
+		inout  wire [7:0] lcd_external_data,                  //                            .data
+		output wire       lcd_external_E,                     //                            .E
 		output wire [7:0] led_pio_external_connection_export, // led_pio_external_connection.export
 		input  wire       reset_reset_n,                      //                       reset.reset_n
 		input  wire [7:0] sw_pio_external_connection_export   //  sw_pio_external_connection.export
@@ -32,6 +36,12 @@ module first_nios2_system (
 	wire  [31:0] mm_interconnect_0_jtag_uart_avalon_jtag_slave_writedata;   // mm_interconnect_0:jtag_uart_avalon_jtag_slave_writedata -> jtag_uart:av_writedata
 	wire  [31:0] mm_interconnect_0_sysid_control_slave_readdata;            // sysid:readdata -> mm_interconnect_0:sysid_control_slave_readdata
 	wire   [0:0] mm_interconnect_0_sysid_control_slave_address;             // mm_interconnect_0:sysid_control_slave_address -> sysid:address
+	wire   [7:0] mm_interconnect_0_lcd_control_slave_readdata;              // lcd:readdata -> mm_interconnect_0:lcd_control_slave_readdata
+	wire   [1:0] mm_interconnect_0_lcd_control_slave_address;               // mm_interconnect_0:lcd_control_slave_address -> lcd:address
+	wire         mm_interconnect_0_lcd_control_slave_read;                  // mm_interconnect_0:lcd_control_slave_read -> lcd:read
+	wire         mm_interconnect_0_lcd_control_slave_begintransfer;         // mm_interconnect_0:lcd_control_slave_begintransfer -> lcd:begintransfer
+	wire         mm_interconnect_0_lcd_control_slave_write;                 // mm_interconnect_0:lcd_control_slave_write -> lcd:write
+	wire   [7:0] mm_interconnect_0_lcd_control_slave_writedata;             // mm_interconnect_0:lcd_control_slave_writedata -> lcd:writedata
 	wire  [31:0] mm_interconnect_0_cpu_debug_mem_slave_readdata;            // cpu:debug_mem_slave_readdata -> mm_interconnect_0:cpu_debug_mem_slave_readdata
 	wire         mm_interconnect_0_cpu_debug_mem_slave_waitrequest;         // cpu:debug_mem_slave_waitrequest -> mm_interconnect_0:cpu_debug_mem_slave_waitrequest
 	wire         mm_interconnect_0_cpu_debug_mem_slave_debugaccess;         // mm_interconnect_0:cpu_debug_mem_slave_debugaccess -> cpu:debug_mem_slave_debugaccess
@@ -62,7 +72,7 @@ module first_nios2_system (
 	wire         irq_mapper_receiver0_irq;                                  // jtag_uart:av_irq -> irq_mapper:receiver0_irq
 	wire         irq_mapper_receiver1_irq;                                  // sys_clk_timer:irq -> irq_mapper:receiver1_irq
 	wire  [31:0] cpu_irq_irq;                                               // irq_mapper:sender_irq -> cpu:irq
-	wire         rst_controller_reset_out_reset;                            // rst_controller:reset_out -> [cpu:reset_n, irq_mapper:reset, jtag_uart:rst_n, led_pio:reset_n, mm_interconnect_0:cpu_reset_reset_bridge_in_reset_reset, onchip_mem:reset, rst_translator:in_reset, sw_pio:reset_n, sys_clk_timer:reset_n, sysid:reset_n]
+	wire         rst_controller_reset_out_reset;                            // rst_controller:reset_out -> [cpu:reset_n, irq_mapper:reset, jtag_uart:rst_n, lcd:reset_n, led_pio:reset_n, mm_interconnect_0:cpu_reset_reset_bridge_in_reset_reset, onchip_mem:reset, rst_translator:in_reset, sw_pio:reset_n, sys_clk_timer:reset_n, sysid:reset_n]
 	wire         rst_controller_reset_out_reset_req;                        // rst_controller:reset_req -> [cpu:reset_req, onchip_mem:reset_req, rst_translator:reset_req_in]
 
 	first_nios2_system_cpu cpu (
@@ -106,6 +116,21 @@ module first_nios2_system (
 		.av_writedata   (mm_interconnect_0_jtag_uart_avalon_jtag_slave_writedata),   //                  .writedata
 		.av_waitrequest (mm_interconnect_0_jtag_uart_avalon_jtag_slave_waitrequest), //                  .waitrequest
 		.av_irq         (irq_mapper_receiver0_irq)                                   //               irq.irq
+	);
+
+	first_nios2_system_lcd lcd (
+		.reset_n       (~rst_controller_reset_out_reset),                   //         reset.reset_n
+		.clk           (clk_clk),                                           //           clk.clk
+		.begintransfer (mm_interconnect_0_lcd_control_slave_begintransfer), // control_slave.begintransfer
+		.read          (mm_interconnect_0_lcd_control_slave_read),          //              .read
+		.write         (mm_interconnect_0_lcd_control_slave_write),         //              .write
+		.readdata      (mm_interconnect_0_lcd_control_slave_readdata),      //              .readdata
+		.writedata     (mm_interconnect_0_lcd_control_slave_writedata),     //              .writedata
+		.address       (mm_interconnect_0_lcd_control_slave_address),       //              .address
+		.LCD_RS        (lcd_external_RS),                                   //      external.export
+		.LCD_RW        (lcd_external_RW),                                   //              .export
+		.LCD_data      (lcd_external_data),                                 //              .export
+		.LCD_E         (lcd_external_E)                                     //              .export
 	);
 
 	first_nios2_system_led_pio led_pio (
@@ -190,6 +215,12 @@ module first_nios2_system (
 		.jtag_uart_avalon_jtag_slave_writedata   (mm_interconnect_0_jtag_uart_avalon_jtag_slave_writedata),   //                                .writedata
 		.jtag_uart_avalon_jtag_slave_waitrequest (mm_interconnect_0_jtag_uart_avalon_jtag_slave_waitrequest), //                                .waitrequest
 		.jtag_uart_avalon_jtag_slave_chipselect  (mm_interconnect_0_jtag_uart_avalon_jtag_slave_chipselect),  //                                .chipselect
+		.lcd_control_slave_address               (mm_interconnect_0_lcd_control_slave_address),               //               lcd_control_slave.address
+		.lcd_control_slave_write                 (mm_interconnect_0_lcd_control_slave_write),                 //                                .write
+		.lcd_control_slave_read                  (mm_interconnect_0_lcd_control_slave_read),                  //                                .read
+		.lcd_control_slave_readdata              (mm_interconnect_0_lcd_control_slave_readdata),              //                                .readdata
+		.lcd_control_slave_writedata             (mm_interconnect_0_lcd_control_slave_writedata),             //                                .writedata
+		.lcd_control_slave_begintransfer         (mm_interconnect_0_lcd_control_slave_begintransfer),         //                                .begintransfer
 		.led_pio_s1_address                      (mm_interconnect_0_led_pio_s1_address),                      //                      led_pio_s1.address
 		.led_pio_s1_write                        (mm_interconnect_0_led_pio_s1_write),                        //                                .write
 		.led_pio_s1_readdata                     (mm_interconnect_0_led_pio_s1_readdata),                     //                                .readdata
